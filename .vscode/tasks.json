@@ -8,10 +8,10 @@
             "type": "shell",
             "command": "g++",
             "args": [
-                "-g",
-                "main.cpp",
+                "-std=c++11",
                 "-o",
-                "main.exe"
+                "main",
+                "main.cpp"
             ],
             "group": {
                 "kind": "build",

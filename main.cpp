@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <cstdlib>
 #include <queue>
 #include <array>
 #include <math.h>
@@ -58,7 +59,7 @@ class cmpFunction {
 
 };
 
-void solution(Node*& node) {
+void solution(const Node& node) {
 
 }
 
@@ -95,6 +96,64 @@ int heuristic(const vector<vector<int>>& currState, const vector<vector<int>>& g
 	return sumDist;
 }
 
+bool goalTest(const vector<vector<int>>& state, const vector<vector<int>>& goal) {
+	return heuristic(state, goal) == 0;
+}
+
+vector<char> actions(const vector<vector<int>>& state) {
+	enum position {
+		TOP_RIGHT
+	}
+
+	vector<char> vecActions;
+	vector<int> coors;
+	for (size_t i = 0; i < state.size(); i++) {
+		for (size_t j = 0; j < state[i].size(); j++) {
+			if (state[i][j] == 0) {
+				coors.push_back(i);
+				coors.push_back(j);
+			}
+		}
+	}
+
+	if (coors[0] == 0) {
+		vecActions.push_back('D');
+		if (coors[1] == 0) {
+			vecActions.push_back('R');
+		}
+		else if (coors[1] == 1) {
+			vecActions.push_back('R');
+			vecActions.push_back('L');
+		}
+		else if (coors[1] == 2) {
+			vecActions.push_back('L');
+			vecActions.push_back('D');
+		}
+	}
+	else if (coors[0] == 1) {
+		vecActions.push_back('D');
+		vecActions.push_back('U');
+		if (coors[1] == 1) {
+			vecActions.push_back('L');
+			vecActions.push_back('R');
+		}
+		else if (coors[1] == 0) {
+			vecActions.push_back('R');
+		}
+		else {
+			vecActions.push_back('L');
+		}
+	}
+	else {
+		vecActions.push_back('U');
+	}
+	
+
+}
+
+Node child-node(const Node& currNode, const char action) {
+
+}
 
 void graphSearchA(string file) {
 	ifstream ifs(file);
@@ -129,6 +188,7 @@ void graphSearchA(string file) {
 			i++;
 		}
 	}
+	ifs.close();
 
 	// cout << "The tile distance for 2 is: " << 
 	int chessDest = tileDist(2, initialState, goalState); 
