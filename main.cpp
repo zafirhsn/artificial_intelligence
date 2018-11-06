@@ -65,7 +65,7 @@ class cmpFunction {
 };
 
 // This function creates the output file and writes to the file in the format specified in the project problem once the solution node has been found
-void solution(const Node& node, const vector<vector<int>>& initialState, const vector<vector<int>>& goalState) {
+void solution(const Node* node, const vector<vector<int>>& initialState, const vector<vector<int>>& goalState) {
 	ofstream outputFile;
 	outputFile.open("Output1.txt");
 	string fstring;
@@ -83,7 +83,7 @@ void solution(const Node& node, const vector<vector<int>>& initialState, const v
 		fstring += '\n';
 	}
 	fstring += '\n';
-	vector<char> path = node.getPath();
+	vector<char> path = node->getPath();
 	fstring += to_string(path.size()) + '\n';
 	fstring += "N\n";
 	for (size_t i = 0; i < path.size(); i++) {
@@ -176,15 +176,30 @@ vector<char> actions(const vector<vector<int>>& state) {
 	return vecActions;	
 }
 
+// remove the node with the lowest pathCost from the frontier and return the pointer
+Node* pop(vector<Node*>& frontier) {
+	int minCost = 100;
+	int minIndex = 0;
+	for (size_t i = 0; i < frontier.size(); i++) {
+		int pathCost = frontier[i]->getPathCost();
+		if (pathCost < minCost) {
+			minCost = pathCost;
+			minIndex = i;
+		}
+	}
+	Node* nodeptr = frontier[minIndex];
+	frontier.erase((frontier.begin()+minIndex));
+	return nodeptr;
+}
 
 // This function creates a child node using the state of the current node, a legal action, and the goal state for the problem
-Node* childNode(const Node& currNode, const char action, const vector<vector<int>>& goalState) {
-	vector<vector<int>> childState = currNode.getState();
+Node* childNode(const Node* currNode, const char action, const vector<vector<int>>& goalState) {
+	vector<vector<int>> childState = currNode->getState();
 
-	vector<char> path = currNode.getPath(); 
+	vector<char> path = currNode->getPath(); 
 	path.push_back(action);
 
-	int fcost = currNode.getPathCost() - heuristic(currNode.getState(), goalState) + 1;
+	int fcost = currNode->getPathCost() - heuristic(currNode->getState(), goalState) + 1;
 
 	int temp;
 	for (size_t i = 0; i < childState.size(); i++) {
@@ -215,6 +230,32 @@ Node* childNode(const Node& currNode, const char action, const vector<vector<int
 	Node* child = new Node(childState, pathCost, path);
 	return child;
 }
+
+
+bool equals(const vector<vector<int>>& s, const vector<vector<int>>& t) {
+	for (size_t i = 0; i < s.size(); i++) {
+		for (size_t j = 0; j < s[i].size(); j++) {
+			if (s[i][j] != t[i][j]) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+// Check if a state is inside frontier or explored
+bool contains(const vector<vector<int>>& state, const vector<Node*>& nodevec) {
+
+	for (size_t i = 0; i < nodevec.size(); i++) {
+		// vector<vector<int>> currState = nodevec[i]->getState();
+		if(equals(state, nodevec[i]->getState())) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
 
 
 // GRAPH-SEARCH A* using Sum of Manhattan distances of tiles from their goal position as heuristic. 
@@ -272,6 +313,7 @@ void graphSearchA(string file) {
 	cout << goalTest(initialState, goalState) << endl;
 
 	// actions TESTS 
+
 	vector<char> vecActions = actions(test.getState());
 	cout << "These are the actions for this state" << endl;	 
 	for (size_t i = 0; i < vecActions.size(); i++) {
@@ -280,7 +322,8 @@ void graphSearchA(string file) {
 
 	// childNode TESTS
 	cout << "Child node test: " << endl;
-	Node* child = childNode(test, 'U', goalState);
+	Node* testptr = &test;
+	Node* child = childNode(testptr, 'U', goalState);
 	child->displayState();
 	child->displayPathCost();
 	child->displayPath();
@@ -301,41 +344,48 @@ void graphSearchA(string file) {
 
 	// soultion TESTS
 	cout << "This is a solution test: " << endl;
-	solution(test, initialState, goalState);
+	solution(&test, initialState, goalState);
 
 	cout << "======================" << endl;
 	cout << "======================" << endl;
 	cout << endl;
 
-	Node root(initialState, heuristic(initialState, goalState), {});
-	priority_queue<Node, vector<Node>, cmpFunction > frontier;
-	frontier.push(root);
+
+	Node* root = new Node(initialState, heuristic(initialState, goalState), {});
+	vector<Node*> frontier; 
+	frontier.push_back(root);
 	vector<Node*> explored;
 
+	while(true) {
+		if (frontier.empty()) { 
+			cerr << "Search has failed" << endl;
+			exit(1);
+		}
+		Node* n = pop(frontier);
+		cout << "Popped frontier" << endl;
+		n->displayState();
+		n->displayPath();
+		n->displayPathCost();
 
-	
-	// while(true) {
-	// 	if (frontier.empty()) { 
-	// 		cerr << "Search has failed" << endl;
-	// 		exit(1);
-	// 	}
-	// 	Node n = frontier.pop();
-	// 	if (goalTest(n.getState(), goalState)) {
-	// 		// return solution(n);
-	// 	}
-	// 	explored.push_back(n);
-	// 	vector<char> possActions = actions(n.getState());
-	// 	for (size_t i = 0; i < possActions.size(); i++)) {
-	// 		Node* nodeptr = childNode(n, possActions[i], goalState);
-	// 		if (nodeptr->getState() ) {
+		if (goalTest(n->getState(), goalState)) {
+			return solution(n, initialState, goalState);
+		}
 
-	// 		}
-	// 	}
-	// }
-
-
-	
-
+		explored.push_back(n);
+		vector<char> possActions = actions(n->getState());
+		for (size_t i = 0; i < possActions.size(); i++) {
+			cout << possActions[i] << " " << endl;
+			Node* child = childNode(n, possActions[i], goalState);
+			cout << "Created child" << endl;
+			if (!(contains(child->getState(), frontier)) || !(contains(child->getState(), explored))) {
+				frontier.push_back(child);
+			}
+			// else if (child->getState() in frontier with lower pathCost {
+			// 	replace that node in frontier
+			// }
+		}
+		cout << frontier.size() << endl;
+	}
 
 }
 
