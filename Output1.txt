@@ -7,7 +7,5 @@
 7 6 5 
 
 5
-N
-e file.
- open the file.
-.
+16
+U U L D R 

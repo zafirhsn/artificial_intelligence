@@ -65,9 +65,8 @@ class cmpFunction {
 };
 
 // This function creates the output file and writes to the file in the format specified in the project problem once the solution node has been found
-void solution(const Node* node, const vector<vector<int>>& initialState, const vector<vector<int>>& goalState) {
-	ofstream outputFile;
-	outputFile.open("Output1.txt");
+void solution(const Node* node, const vector<vector<int>>& initialState, const vector<vector<int>>& goalState, const int generated) {
+	ofstream outputFile("Output2.txt");
 	string fstring;
 	for (size_t i = 0; i < initialState.size(); i++) {
 		for (size_t j = 0; j < initialState[i].size(); j++) {
@@ -85,11 +84,14 @@ void solution(const Node* node, const vector<vector<int>>& initialState, const v
 	fstring += '\n';
 	vector<char> path = node->getPath();
 	fstring += to_string(path.size()) + '\n';
-	fstring += "N\n";
+	fstring += to_string(generated) + '\n';
 	for (size_t i = 0; i < path.size(); i++) {
-			fstring += path[i] + " ";
+			fstring = fstring + path[i] + " ";
+			cout << path[i] << " " << endl;
+			// cout << pathstr << endl;
 	}
 	outputFile << fstring;
+	// cout << fstring << endl;
 	outputFile.close();
 }
 
@@ -135,10 +137,6 @@ bool goalTest(const vector<vector<int>>& state, const vector<vector<int>>& goal)
 
 // This function returns a vector containing all possible actions doable from a given state
 vector<char> actions(const vector<vector<int>>& state) {
-	// enum position {
-	// 	TOP_RIGHT
-	// }
-
 	vector<char> vecActions;
 	vector<int> coors;
 	for (size_t i = 0; i < state.size(); i++) {
@@ -198,6 +196,9 @@ Node* childNode(const Node* currNode, const char action, const vector<vector<int
 	// cout << "Copied state to Child" << endl;
 
 	vector<char> path = currNode->getPath(); 
+	for (size_t i = 0; i < path.size(); i++) {
+		cout << "In child node " << path[i] << " " << endl;
+	}
 	path.push_back(action);
 
 	// cout << "Copied path" << endl;
@@ -205,50 +206,46 @@ Node* childNode(const Node* currNode, const char action, const vector<vector<int
 	// cout << "Computed fcost" << endl;
 
 	int temp;
-	bool flag = false;
+	int x;
+	int y;
 	for (size_t i = 0; i < childState.size(); i++) {
-		if (flag) { break; }
 		for (size_t j = 0; j < childState[i].size(); j++) {
 			if (childState[i][j] == 0) {
-				// cout << "This is the row of zero: " << i << endl;
-				// cout << "This is the col of zero: " << j << endl;
-				if (action == 'U') {
-					cout << "In U action" << endl;
-					temp = childState[i-1][j];
-					childState[i-1][j] = 0;
-					childState[i][j] = temp;
-					flag = true;
-					break;
-				}
-				else if (action == 'D') {
-					temp = childState[i+1][j];
-					childState[i+1][j] = 0;
-					childState[i][j] = temp;
-					flag = true;
-					break;
-				}
-				else if (action == 'L') {
-					temp = childState[i][j-1];
-					childState[i][j-1] = 0;
-					childState[i][j] = temp;
-					flag = true;
-					break;
-				}
-				else {
-					temp = childState[i][j+1];
-					childState[i][j+1] = 0;
-					childState[i][j] = temp;
-					flag = true;
-					break;
-				}
+				x = i;
+				y = j;
 			}
 		}
 	}
+	// cout << "This is the row of zero: " << i << endl;
+	// cout << "This is the col of zero: " << j << endl;
+	if (action == 'U') {
+		// cout << "In U action" << endl;
+		temp = childState[x-1][y];
+		childState[x-1][y] = 0;
+	}
+	else if (action == 'D') {
+		temp = childState[x+1][y];
+		childState[x+1][y] = 0;
+		// childState[x][y] = temp;
+	}
+	else if (action == 'L') {
+		temp = childState[x][y-1];
+		childState[x][y-1] = 0;
+		// childState[x][y] = temp;
+	}
+	else {
+		temp = childState[x][y+1];
+		childState[x][y+1] = 0;
+		// childState[x][y] = temp;
+	}
+	childState[x][y] = temp;
+			
 
 	int pathCost = heuristic(childState, goalState) + fcost;
-	cout << "computed new path cost" << endl;
+	// cout << "computed new path cost" << endl;
 	Node* child = new Node(childState, pathCost, path);
 	return child;
+
 }
 
 
@@ -274,7 +271,6 @@ bool contains(const vector<vector<int>>& state, const vector<Node*>& nodevec) {
 	}
 	return false;
 }
-
 
 
 
@@ -364,7 +360,7 @@ void graphSearchA(string file) {
 
 	// soultion TESTS
 	cout << "This is a solution test: " << endl;
-	solution(&test, initialState, goalState);
+	solution(&test, initialState, goalState, 4);
 
 	cout << "======================" << endl;
 	cout << "======================" << endl;
@@ -375,6 +371,7 @@ void graphSearchA(string file) {
 	vector<Node*> frontier; 
 	frontier.push_back(root);
 	vector<Node*> explored;
+	int generated = 1;
 
 	while(true) {
 		if (frontier.empty()) { 
@@ -384,21 +381,28 @@ void graphSearchA(string file) {
 		Node* n = pop(frontier);
 		cout << "Popped frontier" << endl;
 		n->displayState();
+		vector<char> newpath = n->getPath();
+		for (size_t i = 0; i < newpath.size(); i++) {
+			cout << newpath[i] << " " << endl;
+		}
 		n->displayPath();
 		n->displayPathCost();
 
 		if (goalTest(n->getState(), goalState)) {
-			return solution(n, initialState, goalState);
+			return solution(n, initialState, goalState, generated);
 		}
+
 
 		explored.push_back(n);
 		vector<char> possActions = actions(n->getState());
 		for (size_t i = 0; i < possActions.size(); i++) {
-			// cout << possActions[i] << " " << endl;
+			cout << possActions[i] << " " << endl;
 			Node* child = childNode(n, possActions[i], goalState);
 			// cout << "Created child" << endl;
 			if (!(contains(child->getState(), frontier)) || !(contains(child->getState(), explored))) {
+				generated++;
 				frontier.push_back(child);
+
 			}
 			// else if (child->getState() in frontier with lower pathCost {
 			// 	replace that node in frontier
@@ -412,7 +416,7 @@ void graphSearchA(string file) {
 int main() {
 	cout << "Hello, world" << endl;
 
-	graphSearchA("Input1.txt");
+	graphSearchA("Input2.txt");
 
 
 }
