@@ -31,7 +31,7 @@ public:
 	void displayPath() const {
 		string strpath;
 		for (size_t i = 0; i < path.size(); i++) {
-				strpath += path[i] + " ";
+				strpath = strpath + path[i] + " ";
 		}
 		cout << "Path: " << strpath << endl;
 	
@@ -56,17 +56,9 @@ private:
 
 };
 
-// This function defines the comparison operator that is used in a min-heap with the user defined type, node. 
-class cmpFunction {
-	public:
-		int operator()(const Node& a, const Node& b) {
-			return (a.getPathCost() > b.getPathCost());
-		}
-};
-
 // This function creates the output file and writes to the file in the format specified in the project problem once the solution node has been found
-void solution(const Node* node, const vector<vector<int>>& initialState, const vector<vector<int>>& goalState, const int generated) {
-	ofstream outputFile("Output2.txt");
+void solution(const string ofstring, const Node* node, const vector<vector<int>>& initialState, const vector<vector<int>>& goalState, const int generated) {
+	ofstream outputFile(ofstring);
 	string fstring;
 	for (size_t i = 0; i < initialState.size(); i++) {
 		for (size_t j = 0; j < initialState[i].size(); j++) {
@@ -117,6 +109,7 @@ int tileDist(int tile, const vector<vector<int>>& currState, const vector<vector
 	int ydiff = abs(stateCoor[1] - goalCoor[1]);
 
 	int tileDist = xdiff + ydiff;
+	cout << "tile dist: " << tileDist << endl;
 	return tileDist;
 
 }
@@ -275,7 +268,7 @@ bool contains(const vector<vector<int>>& state, const vector<Node*>& nodevec) {
 
 
 // GRAPH-SEARCH A* using Sum of Manhattan distances of tiles from their goal position as heuristic. 
-void graphSearchA(string file) {
+void graphSearchA(const string file, const string ofile) {
 	ifstream ifs(file);
 	if (!ifs) {
 		cerr << "Could not open the file.\n";
@@ -307,67 +300,8 @@ void graphSearchA(string file) {
 	ifs.close();
 
 
-	// Node class TESTS
-	cout << "Node class tests: " << endl;
-	Node test(initialState, heuristic(initialState, goalState), {});
-	test.displayState();
-	test.displayPath();
-	test.displayPathCost();
-
-	// tileDist TESTS
-	int manDist2 = tileDist(3, initialState, goalState); 
-	cout << "The tile distance for 3 is: " << manDist2 << endl;
-	int manDist8 = tileDist(8, initialState, goalState);
-	cout << "The tile distance for 8 is: " << manDist8 << endl;
-
-	// heuristic TESTS
-	int sumDist = heuristic(initialState, goalState);
-	cout << "The sum of all Manhattan distances is: " << sumDist << endl;
-
-	// goaltest TESTS
-	cout << "Goal Test" << endl;
-	cout << goalTest(initialState, goalState) << endl;
-
-	// actions TESTS 
-
-	vector<char> vecActions = actions(test.getState());
-	cout << "These are the actions for this state" << endl;	 
-	for (size_t i = 0; i < vecActions.size(); i++) {
-		cout << vecActions[i] << endl;
-	}
-
-	// childNode TESTS
-	cout << "Child node test: " << endl;
-	Node* testptr = &test;
-	Node* child = childNode(testptr, 'U', goalState);
-	child->displayState();
-	child->displayPathCost();
-	child->displayPath();
-
-	// frontier TESTS
-	cout << "Frontier test: " << endl;
-	// Node goal(goalState, 6, {});
-	// priority_queue<Node, vector<Node>, cmpFunction > frontier;
-	// vector<Node*> explored;
-
-	// frontier.push(root);
-	// frontier.push(goal);
-
-	// Node n = frontier.top();
-	// n.displayState();
-	// cout << frontier.top() << endl;
-
-
-	// soultion TESTS
-	cout << "This is a solution test: " << endl;
-	solution(&test, initialState, goalState, 4);
-
-	cout << "======================" << endl;
-	cout << "======================" << endl;
-	cout << endl;
-
-
 	Node* root = new Node(initialState, heuristic(initialState, goalState), {});
+	cout << "set up root" << endl;
 	vector<Node*> frontier; 
 	frontier.push_back(root);
 	vector<Node*> explored;
@@ -382,16 +316,12 @@ void graphSearchA(string file) {
 		cout << "Popped frontier" << endl;
 		n->displayState();
 		vector<char> newpath = n->getPath();
-		for (size_t i = 0; i < newpath.size(); i++) {
-			cout << newpath[i] << " " << endl;
-		}
 		n->displayPath();
 		n->displayPathCost();
 
 		if (goalTest(n->getState(), goalState)) {
-			return solution(n, initialState, goalState, generated);
+			return solution(ofile, n, initialState, goalState, generated);
 		}
-
 
 		explored.push_back(n);
 		vector<char> possActions = actions(n->getState());
@@ -399,9 +329,12 @@ void graphSearchA(string file) {
 			cout << possActions[i] << " " << endl;
 			Node* child = childNode(n, possActions[i], goalState);
 			// cout << "Created child" << endl;
-			if (!(contains(child->getState(), frontier)) || !(contains(child->getState(), explored))) {
+			if (!(contains(child->getState(), frontier)) && !(contains(child->getState(), explored))) {
 				generated++;
+				cout << "in frontier: " << to_string(contains(child->getState(), frontier)) << endl;
+				cout << "in explored: " << to_string(contains(child->getState(), explored)) << endl;
 				frontier.push_back(child);
+				cout << "Not in frontier or explored, let's add" << endl;
 
 			}
 			// else if (child->getState() in frontier with lower pathCost {
@@ -410,13 +343,14 @@ void graphSearchA(string file) {
 		}
 		cout << frontier.size() << endl;
 	}
-
 }
 
 int main() {
-	cout << "Hello, world" << endl;
 
-	graphSearchA("Input2.txt");
+	graphSearchA("Input1.txt", "Output1.txt");
+	graphSearchA("Input2.txt", "Output2.txt");
+	graphSearchA("Input3.txt", "Output3.txt");
+	graphSearchA("Input4.txt", "Output4.txt");
 
 
 }
