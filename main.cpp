@@ -31,7 +31,7 @@ public:
 	void displayPath() const {
 		string strpath;
 		for (size_t i = 0; i < path.size(); i++) {
-				strpath += path[i];
+				strpath += path[i] + " ";
 		}
 		cout << "Path: " << strpath << endl;
 	
@@ -195,38 +195,58 @@ Node* pop(vector<Node*>& frontier) {
 // This function creates a child node using the state of the current node, a legal action, and the goal state for the problem
 Node* childNode(const Node* currNode, const char action, const vector<vector<int>>& goalState) {
 	vector<vector<int>> childState = currNode->getState();
+	// cout << "Copied state to Child" << endl;
 
 	vector<char> path = currNode->getPath(); 
 	path.push_back(action);
 
+	// cout << "Copied path" << endl;
 	int fcost = currNode->getPathCost() - heuristic(currNode->getState(), goalState) + 1;
+	// cout << "Computed fcost" << endl;
 
 	int temp;
+	bool flag = false;
 	for (size_t i = 0; i < childState.size(); i++) {
+		if (flag) { break; }
 		for (size_t j = 0; j < childState[i].size(); j++) {
 			if (childState[i][j] == 0) {
+				// cout << "This is the row of zero: " << i << endl;
+				// cout << "This is the col of zero: " << j << endl;
 				if (action == 'U') {
+					cout << "In U action" << endl;
 					temp = childState[i-1][j];
 					childState[i-1][j] = 0;
+					childState[i][j] = temp;
+					flag = true;
+					break;
 				}
 				else if (action == 'D') {
 					temp = childState[i+1][j];
 					childState[i+1][j] = 0;
+					childState[i][j] = temp;
+					flag = true;
+					break;
 				}
 				else if (action == 'L') {
 					temp = childState[i][j-1];
 					childState[i][j-1] = 0;
+					childState[i][j] = temp;
+					flag = true;
+					break;
 				}
 				else {
 					temp = childState[i][j+1];
 					childState[i][j+1] = 0;
+					childState[i][j] = temp;
+					flag = true;
+					break;
 				}
-				childState[i][j] = temp;
 			}
 		}
 	}
 
 	int pathCost = heuristic(childState, goalState) + fcost;
+	cout << "computed new path cost" << endl;
 	Node* child = new Node(childState, pathCost, path);
 	return child;
 }
@@ -374,9 +394,9 @@ void graphSearchA(string file) {
 		explored.push_back(n);
 		vector<char> possActions = actions(n->getState());
 		for (size_t i = 0; i < possActions.size(); i++) {
-			cout << possActions[i] << " " << endl;
+			// cout << possActions[i] << " " << endl;
 			Node* child = childNode(n, possActions[i], goalState);
-			cout << "Created child" << endl;
+			// cout << "Created child" << endl;
 			if (!(contains(child->getState(), frontier)) || !(contains(child->getState(), explored))) {
 				frontier.push_back(child);
 			}
