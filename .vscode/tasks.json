@@ -9,14 +9,30 @@
             "command": "g++",
             "args": [
                 "-g",
-                "main.cpp",
+                "graphsearch/main.cpp",
                 "-o",
-                "main.exe",
+                "graphsearch/main.exe"
             ],
             "group": {
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "label": "echo2",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "-g",
+                "neural-network/main.cpp",
+                "-o",
+                "neural-network/main.exe"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
         }
     ]
 }
