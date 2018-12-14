@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "echo",
+            "label": "build graph-search",
             "type": "shell",
             "command": "g++",
             "args": [
@@ -19,7 +19,7 @@
             }
         },
         {
-            "label": "echo2",
+            "label": "build neural-network",
             "type": "shell",
             "command": "g++",
             "args": [
