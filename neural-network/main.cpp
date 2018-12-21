@@ -7,7 +7,7 @@
 
 using namespace std;
 
-
+// Initialize the weights between all layers with random numbers between 0.0 and 1.0
 void initializeWeights(vector<vector<float>>& layer) {
   for (size_t i = 0; i < layer.size(); i++) {
     for (size_t j = 0; j < layer[i].size(); j++) {
@@ -17,6 +17,7 @@ void initializeWeights(vector<vector<float>>& layer) {
   }
 }
 
+// Display any one of the weight layers
 void displayLayer(const vector<vector<float>>& layer) {
   for (size_t i = 0; i < layer.size(); i++) {
     for (size_t j = 0; j < layer[i].size(); j++) {
@@ -26,21 +27,25 @@ void displayLayer(const vector<vector<float>>& layer) {
   }
 }
 
+// Display any of the perceptron layers
 void displayLayer(const vector<float>& layer) {
   for (size_t i = 0; i < layer.size(); i++) {
     cout << layer[i] << endl;
   }
 }
 
+// Activation function (Sigmoid) f = 1 / (1 + e^-x)
 float activation(float x) {
   return (1 / (1 + exp(-x)));
 }
 
+
+// Derivative of activation function (Sigmoid) f' = e^x / (1 + e^x)
 float derivSigmoid(float x) {
   return (exp(-x) / pow((1 + exp(-x)), 2));
 }
 
-float neuronOutput(const vector<float>& input, const vector<float>& weights) {
+float weightedSum(const vector<float>& input, const vector<float>& weights) {
   float weightSum = 0;
   for (size_t i = 0; i <= input.size(); i++) {
     if (i == input.size()) {
@@ -50,8 +55,12 @@ float neuronOutput(const vector<float>& input, const vector<float>& weights) {
       weightSum += input[i] * weights[i];
     }  
   }
-  // float weightSum = weightedSum(input, weights);
+  return weightSum;
+}
 
+// Compute output of single neuron
+float neuronOutput(const vector<float>& input, const vector<float>& weights) {
+  float weightSum = weightedSum(input, weights);
   cout << "Weighted sum of inputs: " << weightSum << endl;
   float output = activation(weightSum);
   cout << "Neuron Output: " << output << endl;
@@ -73,44 +82,56 @@ void assert(const string& desc, float correctOut, float output) {
 }
 
 /*
-  float weightedSum(const vector<float>& input, const vector<float>& weights) {
-    float weightSum = 0;
-    for (size_t i = 0; i <= input.size(); i++) {
-      if (i == input.size()) {
-        weightSum += -1 * weights[i];
-      }
-      else {
-        weightSum += input[i] * weights[i];
-      }  
-    }
-    return weightSum;
- }
-
- updateWeights(weightLayer, learningRate, deltas) {
- 
+ updateOutputWeights(weightLayer, learningRate, inputLayer, deltas) {
+   for (size_t i = 0; i < weightLayer.size(); i++) { 
+     for (size_t j = 0; j < weightLayer[i].size() - 1; j++) {
+        weightLayer[i][j] += learningRate * inputLayer[j] * deltas[i];
+     }
+   }
+      
  }
 */
 
 /*
-void backPropagate(all the layers and weights) {
+updateHiddenWeights(weightLayer, learningRate, inputLayer, deltas) {
+  for (size_t i = 0; i < weightLayer.size(); i++) {
+    for (size_t j = 0; j < weightLayer[i].size() - 1; j++) {
+      weightLayer[i][j] += learningRate * inputLayer[j] * deltas[i];
+    }
+  }
+}
+*/
+
+/*
+
+void backPropagate(vector<float>& outputLayer, vector<vector<float>>& outWeights, vector<float>& hiddenLayer, vector<vector<float>>& hidWeights, vector<float>& inputLayer, vector<float>& idealOutput) {
+  // Store deltas for output and hidden layer neurons in vectors
   vector<float> outputDeltas(5);
   vector<float> hiddenDeltas(100);
-  
-  for (size of output layer) {
+
+  // Loop through size of output layer in order to compute delta for each neuron and store in vector
+  for (size_t i = 0; i < output.size(); i++) {
+    // Error = ideal - actual
     float err = ideal  - outputLayer[i];
+
+    // Compute the weighted sum between these layers for the ith output neuron
     float weightSum = weightedSum(hiddenLayer, outWeights[i]);
+
     float delta = err * derivSigmoid(weightSum);
     outputDelta[i] = delta;
   }
   
-  updateWeights(weightLayer, learningRate, hiddenLayer, deltas);
+  // Update weights between output layer and hidden layer 
+  updateOutputWeights(weightLayer, learningRate, hiddenLayer, deltas);
 
+  // Loop through size of hidden layer in order to compute deltas for hidden layer neurons
   for (size of hidden layer) {  
     float delta = derivSigmoid(weightedSum(hiddenLayer[i])) * sumofAll (( weight of W(ji) * delta for neuron i ))
     hiddenDeltas[i] = delta;
   }
 
-  updateWeights(weightLayer, learningRate, inputLayer, deltas);
+  // Update weights between hidden layer and input layer using back propagation 
+  updateHiddenWeights(weightLayer, learningRate, inputLayer, deltas);
   
 
 }
@@ -128,10 +149,13 @@ void neuralNetwork(int numHidden) {
   vector<float> outputLayer(5);
 
   outputLayer.push_back(5);
-  initializeWeights(hidWeights);
-  initializeWeights(outWeights);
+  // initializeWeights(hidWeights);
+  // initializeWeights(outWeights);
 
   float output = neuronOutput(inputLayer, hidWeights[0]);
+  float weightSum = weightedSum(inputLayer, hidWeights[0]);
+  cout << "Weighted sum of hidden layer neuron 0 is: " << weightSum << endl;
+
   // assert("Hidden neuron 0", 0.248, output);
   // assert("Hidden neuron 0 output" , 0.52478, output);
   
@@ -143,7 +167,6 @@ void neuralNetwork(int numHidden) {
     computeNodes(outputLayer, outWeights, hiddenLayer);
     backPropagate(outputLayer, outWeights, hiddenLayer, hidWeights, inputLayer, vector of actual ANSWER);
 
-
   }
 
   */
@@ -154,6 +177,5 @@ void neuralNetwork(int numHidden) {
 int main() {
 
     neuralNetwork(100);
-    float x = derivSigmoid(0.67);
-    cout << x << endl;
+
 }
