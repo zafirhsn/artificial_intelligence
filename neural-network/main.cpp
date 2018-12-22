@@ -4,6 +4,7 @@
 #include <vector>
 #include <cmath>
 #include <cstdlib>
+#include <stdio.h>
 
 using namespace std;
 
@@ -30,6 +31,7 @@ void initializeWeights(vector<vector<float>>& layer) {
 // COMPLETED TESTS
 void displayLayer(const vector<vector<float>>& layer) {
   for (size_t i = 0; i < layer.size(); i++) {
+		cout << "All weights for layer[" << i << "]:" << endl;
     for (size_t j = 0; j < layer[i].size(); j++) {
       cout << layer[i][j] << " "; 
     }
@@ -106,8 +108,7 @@ void assert(const string& desc, float correctOut, float output) {
   }
 }
 
-/*
-void updateWeights(weightLayer, learningRate, inputLayer, deltas) {
+void updateWeights(vector<vector<float>>& weightLayer, float learningRate, const vector<float>& inputLayer, const vector<float>& deltas) {
    for (size_t i = 0; i < weightLayer.size(); i++) { 
      for (size_t j = 0; j < weightLayer[i].size() - 1; j++) {
         weightLayer[i][j] += learningRate * inputLayer[j] * deltas[i];
@@ -115,20 +116,16 @@ void updateWeights(weightLayer, learningRate, inputLayer, deltas) {
    }
       
  }
-*/
 
-/*
 float sumWeightDeltas(const vector<vector<float>>& weights, const vector<float>& deltas, int neuronIndex) {
   float weightSum = 0;
   for (size_t i = 0; i < weights.size(); i++) {
-    weightSum += weights[i][neuronIndex] * delta[i];
+    weightSum += weights[i][neuronIndex] * deltas[i];
   }
   return weightSum;
 }
-*/
 
-/*
-void backPropagate(vector<float>& outputLayer, vector<vector<float>>& outWeights, vector<float>& hiddenLayer, vector<vector<float>>& hidWeights, vector<float>& inputLayer, vector<float>& idealOutput) {
+void backPropagate(vector<float>& outputLayer, vector<vector<float>>& outWeights, vector<float>& hiddenLayer, vector<vector<float>>& hidWeights, vector<float>& inputLayer, vector<vector<float>>& idealOutputs) {
   // Store deltas for output and hidden layer neurons in vectors
   vector<float> outputDeltas(5);
   vector<float> hiddenDeltas(100);
@@ -136,57 +133,135 @@ void backPropagate(vector<float>& outputLayer, vector<vector<float>>& outWeights
   // Loop through size of output layer in order to compute delta for each neuron and store in vector
   for (size_t i = 0; i < outputLayer.size(); i++) {
     // Error = ideal - actual
-    float err = ideal  - outputLayer[i];
+    float err = idealOutputs[0][i] - outputLayer[i];
+		cout << "The error for outlayer[" << i << "] is: " << err << endl;
 
     // Compute the weighted sum between these layers for the ith output neuron
     float weightSum = weightedSum(hiddenLayer, outWeights[i]);
+		cout << "The weighted sum of outputLayer[" << i << "] is: " << weightSum << endl;
+
 
     float delta = err * derivActivation(weightSum);
-    outputDelta[i] = delta;
-  }*/
+		cout << "The DELTA of outputLayer[" << i << "] is: " << delta << endl;
+		cout << endl;
+		outputDeltas[i] = delta;
+  }
   
-  /*
+  
   // Update weights between output layer and hidden layer 
-  updateWeights(outWeights, learningRate, hiddenLayer, outputDeltas);
+  updateWeights(outWeights, 0.2, hiddenLayer, outputDeltas);
+	displayLayer(outWeights);
+	cout << endl;
 
   // Loop through size of hidden layer in order to compute deltas for hidden layer neurons
   for (size_t i = 0; i < hiddenLayer.size(); i++) {  
     // Compute deltas for hidden layer neurons after updating weights between hiddn layer and output layer
-    float delta = derivActivation(weightedSum(inputLayer, hidWeights[i])) * sumWeightDeltas(outWeights, outputDeltas, i);
+		float sumoutgoingWeights = sumWeightDeltas(outWeights, outputDeltas, i);
+    float delta = derivActivation(weightedSum(inputLayer, hidWeights[i])) * sumoutgoingWeights;
+		cout << "The sum of all outgoing weights of hiddenLayer[" << i << "] is: " << sumoutgoingWeights << endl; 
+
+		cout << "The DELTA of hiddenLayer[" << i << "] is: " << delta << endl;
     hiddenDeltas[i] = delta;
   }
 
+
   // Update weights between hidden layer and input layer using back propagation 
-  updateWeights(hidWeights, learningRate, inputLayer, hiddenDeltas);
-  */
+  updateWeights(hidWeights, 0.2, inputLayer, hiddenDeltas);
+	// displayLayer(hidWeights);
 
-// }
+}
 
+
+// Initialize the image labels using either train_labels.txt or test_labels.txt
+// COMPLETED TESTS
+void initializeLabels(vector<vector<float>>& idealOutputs, const string filename) {
+ 	ifstream ifs(filename); 
+  if (!ifs) {
+    cerr << "Could not open the file.\n";
+    exit(1);
+  }
+  else {
+    cout << "File has been opened successfully" << endl;
+  }
+
+	string line;
+  while(getline(ifs, line)) {
+		vector<float> imgLabel; 
+		for (char c : line) {
+			if (c != ' ') {
+				int n = c - 48;
+				imgLabel.push_back((float)n);
+			}
+		}
+		idealOutputs.push_back(imgLabel);
+	}
+}
+
+void readImage(char* filename, vector<float>& inputLayer) {
+	FILE *fp1;
+	
+	short c;
+	int i, j, header, x, y;
+	header = 0;
+	x = 22;
+	y = 22;
+	// char file1[20] = filename;
+
+	if((fp1 = fopen(filename, "rb")) == NULL) {
+		printf("cannot open %s\n", filename);
+		exit(1);
+	}
+	else {
+		cout << "Reading image successfully..." << endl;
+	}
+
+	for (i = 1; i <= header; i++) {  // skip the header 
+		c = getc(fp1);
+	}
+
+	int countPixels = 0;
+	// fprintf(fp2,"%4d",x);  fprintf(fp2,"%4d",y);
+	for (i = 1; i <= y; i++) {
+		for (j = 1; j <= x; j++)
+			{
+				c = getc(fp1);
+				inputLayer.push_back((float)c);
+				countPixels++;
+			}
+	}
+	fclose(fp1);
+	cout << "Num pixels: " << countPixels << endl;
+}
 
 void neuralNetwork(int numHidden) {
   const float learningRate = 0.2;
   float err = 1.0;
 
-  vector<float> inputLayer(748, 0.002);
-  vector<vector<float>> hidWeights(numHidden, vector<float>(749, 0.2));
+  vector<float> inputLayer(748, 0.7);
+  vector<vector<float>> hidWeights(numHidden, vector<float>(749, 0.001));
   vector<float> hiddenLayer(numHidden, 0.0);
-  vector<vector<float>> outWeights(5, vector<float>(101,0.5));
+  vector<vector<float>> outWeights(5, vector<float>(101,0.04));
   vector<float> outputLayer(5);
 
+	vector<vector<float>> idealOutputs;
+
+	initializeLabels(idealOutputs, "train_labels.txt");
+
+	char filename[] = "train_image_0.bmp";
+	readImage(filename, inputLayer);
+	displayLayer(inputLayer);
   // initializeWeights(hidWeights);
   // initializeWeights(outWeights);
 
 
-
-
   // Test for updating all neuron layers with appropriate output
-  cout << "Updating all hidden layer neurons using inputs and weights" << endl;
-  updateNeurons(inputLayer, hidWeights, hiddenLayer);
-  displayLayer(hiddenLayer);
-  updateNeurons(hiddenLayer, outWeights, outputLayer);
-  displayLayer(outputLayer);
+  // cout << "Updating all hidden layer neurons using inputs and weights" << endl;
+  // updateNeurons(inputLayer, hidWeights, hiddenLayer);
+  // displayLayer(hiddenLayer);
+  // updateNeurons(hiddenLayer, outWeights, outputLayer);
+  // displayLayer(outputLayer);
 
-  // backPropagate()
+  // backPropagate(outputLayer, outWeights, hiddenLayer, hidWeights, inputLayer, idealOutputs);
   
 
 /*
@@ -224,21 +299,18 @@ void neuralNetwork(int numHidden) {
 
 }
 
-
 int main() {
 
-    neuralNetwork(NUM_HIDDEN_NEURONS);
+  neuralNetwork(NUM_HIDDEN_NEURONS);
 
+  /*
+  Tests for the derivative of the activation function (derivActivation)
+  cout << "Testing derivative sigmoid function" << endl;
+  cout << "Input of 26.11: " << derivActivation(26.11) << endl;
+  cout << "Input of 0.0: " << derivActivation(0.0) << endl;
+  cout << "Input of 0.5226: " << derivActivation(0.5226) << endl;
+  */
 
-
-
-
-    /*
-    Tests for the derivative of the activation function (derivActivation)
-    cout << "Testing derivative sigmoid function" << endl;
-    cout << "Input of 26.11: " << derivActivation(26.11) << endl;
-    cout << "Input of 0.0: " << derivActivation(0.0) << endl;
-    cout << "Input of 0.5226: " << derivActivation(0.5226) << endl;
-    */
+	
 
 }
