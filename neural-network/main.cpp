@@ -13,15 +13,15 @@ using namespace std;
 Created by Zafir Hasan for Artificial Intelligence (CS-UY 4315). The goal of this program is to create an artificial neural network that can recognize the digits 0-4 in handwriting. This will be a 2 layer fully-connected network that will be trained through back propagation. 
 */
 
-const int NUM_HIDDEN_NEURONS = 100;
-const float LEARNING_RATE = 0.2;
+const int NUM_HIDDEN_NEURONS = 101;
+const float LEARNING_RATE = 0.1;
 
 // Initialize the weights between all layers with random numbers between 0.0 and 1.0
 // COMPLETED TESTS
 void initializeWeights(vector<vector<float>>& layer) {
   for (size_t i = 0; i < layer.size(); i++) {
     for (size_t j = 0; j < layer[i].size(); j++) {
-      float randWeight = (rand() % 1000) / 1000.0;
+      float randWeight = (rand() % 10000) / 10000000000.0;
       layer[i][j] = randWeight;
     }
   }
@@ -93,21 +93,8 @@ void updateNeurons(const vector<float>& inputs, const vector<vector<float>>& wei
   }
 }
 
-void assert(const string& desc, float correctOut, float output) {
-  cout << desc << " SHOULD BE: " << correctOut << endl;
-  cout << desc << " IS : " << output << endl;
-  correctOut = (int)(correctOut / 0.0001) * 0.0001; 
-  output = (int)(output / 0.0001) * 0.0001; 
-  
-  if (correctOut == output) {
-    cout << "TEST PASSED" << endl;
-  }
-  else {
-    cout << "TEST FAILED" << endl;
-  }
-}
-
 // Update weights using weight update rule
+// COMPLETED TESTS 
 void updateWeights(vector<vector<float>>& weightLayer, float learningRate, const vector<float>& inputLayer, const vector<float>& deltas) {
    for (size_t i = 0; i < weightLayer.size(); i++) { 
      for (size_t j = 0; j < weightLayer[i].size() - 1; j++) {
@@ -128,15 +115,15 @@ float sumWeightDeltas(const vector<vector<float>>& weights, const vector<float>&
 
 // Back propagation training
 // COMPLETED TESTS
-void backPropagate(vector<float>& outputLayer, vector<vector<float>>& outWeights, vector<float>& hiddenLayer, vector<vector<float>>& hidWeights, vector<float>& inputLayer, vector<vector<float>>& labels) {
+void backPropagate(vector<float>& outputLayer, vector<vector<float>>& outWeights, vector<float>& hiddenLayer, vector<vector<float>>& hidWeights, vector<float>& inputLayer, vector<float>& labels) {
   // Store deltas for output and hidden layer neurons in vectors
   vector<float> outputDeltas(5);
-  vector<float> hiddenDeltas(100);
+  vector<float> hiddenDeltas(101);
 
   // Loop through size of output layer in order to compute delta for each neuron and store in vector
   for (size_t i = 0; i < outputLayer.size(); i++) {
     // Error = ideal - actual
-    float err = labels[0][i] - outputLayer[i];
+    float err = labels[i] - outputLayer[i];
 		cout << "The error for outlayer[" << i << "] is: " << err << endl;
 
     // Compute the weighted sum between these layers for the ith output neuron
@@ -149,10 +136,9 @@ void backPropagate(vector<float>& outputLayer, vector<vector<float>>& outWeights
 		cout << endl;
 		outputDeltas[i] = delta;
   }
-  
-  
+   
   // Update weights between output layer and hidden layer 
-  updateWeights(outWeights, 0.2, hiddenLayer, outputDeltas);
+  updateWeights(outWeights, LEARNING_RATE, hiddenLayer, outputDeltas);
 	displayLayer(outWeights);
 	cout << endl;
 
@@ -160,7 +146,9 @@ void backPropagate(vector<float>& outputLayer, vector<vector<float>>& outWeights
   for (size_t i = 0; i < hiddenLayer.size(); i++) {  
     // Compute deltas for hidden layer neurons after updating weights between hiddn layer and output layer
 		float sumoutgoingWeights = sumWeightDeltas(outWeights, outputDeltas, i);
-    float delta = derivActivation(weightedSum(inputLayer, hidWeights[i])) * sumoutgoingWeights;
+    float weightSum = weightedSum(inputLayer, hidWeights[i]);
+    cout << "The weighted sum of hiddenLayer[" << i << "] is: " << weightSum << endl;
+    float delta = derivActivation(weightSum) * sumoutgoingWeights;
 		cout << "The sum of all outgoing weights of hiddenLayer[" << i << "] is: " << sumoutgoingWeights << endl; 
 
 		cout << "The DELTA of hiddenLayer[" << i << "] is: " << delta << endl;
@@ -169,7 +157,7 @@ void backPropagate(vector<float>& outputLayer, vector<vector<float>>& outWeights
 
 
   // Update weights between hidden layer and input layer using back propagation 
-  updateWeights(hidWeights, 0.2, inputLayer, hiddenDeltas);
+  updateWeights(hidWeights, LEARNING_RATE, inputLayer, hiddenDeltas);
 	// displayLayer(hidWeights);
 
 }
@@ -250,41 +238,58 @@ float squaredErr(const vector<float>& label, const vector<float>& outputs) {
 }
 
 void neuralNetwork(int numHidden) {
-  const float learningRate = 0.2;
   float meanSquareErr = 0.0;
+  float deltaErr = 1000.0;
   float countEpochs = 0.0;
 
-  vector<float> inputLayer(784, 0.7);
-  vector<vector<float>> hidWeights(numHidden, vector<float>(785, 0.001));
-  vector<float> hiddenLayer(numHidden, 0.0);
-  vector<vector<float>> outWeights(5, vector<float>(101, 0.04));
+  vector<float> inputLayer;
+  vector<vector<float>> hidWeights(numHidden, vector<float>(785));
+  vector<float> hiddenLayer(numHidden);
+  vector<vector<float>> outWeights(5, vector<float>(numHidden));
   vector<float> outputLayer(5);
 
 	vector<vector<float>> labels;
   string filename;
 
 	initializeLabels(labels, "train_labels.txt");
-  // initializeWeights(hidWeights);
-  // initializeWeights(outWeights);
-
-/*
-  while ()
-*/
-	// readImage(filename, inputLayer);
-	// displayLayer(inputLayer);
+  initializeWeights(hidWeights);
+  initializeWeights(outWeights);
 
 
-  // Test for updating all neuron layers with appropriate output
-  cout << "Updating all hidden layer neurons using inputs and weights" << endl;
-  updateNeurons(inputLayer, hidWeights, hiddenLayer);
-  displayLayer(hiddenLayer);
-  updateNeurons(hiddenLayer, outWeights, outputLayer);
-  displayLayer(outputLayer);
+  while (abs(deltaErr) > 0.90) {
+    // Read the next image and initialize inputLayer with decimal pixel values
+    inputLayer.clear();
+    filename = "train_img/train_image_" + to_string((int)countEpochs) + ".bmp";
+    readImage(filename, inputLayer);
 
-  backPropagate(outputLayer, outWeights, hiddenLayer, hidWeights, inputLayer, labels);
-  float errSquare = squaredErr(labels[0], outputLayer);
-  cout << "The squared error is: " << errSquare << endl;
-  
+    // Update neurons in hidden and output layers using new inputs
+    updateNeurons(inputLayer, hidWeights, hiddenLayer);
+    displayLayer(hiddenLayer);
+    updateNeurons(hiddenLayer, outWeights, outputLayer);
+    displayLayer(outputLayer);
+
+    // Back propagate the error
+    backPropagate(outputLayer, outWeights, hiddenLayer, hidWeights, inputLayer, labels[(int)countEpochs]);
+
+    // Compute the square error for the output neurons for this image and then calculate the percent change in error from the meanSquareErr
+    float errSquare = squaredErr(labels[(int)countEpochs], outputLayer);
+    countEpochs += 1.0;
+    if (meanSquareErr == 0.0) {
+      meanSquareErr = errSquare;
+    }
+    else {
+      deltaErr = ((errSquare - meanSquareErr) / meanSquareErr) * 100.0;
+      meanSquareErr = ((meanSquareErr * (countEpochs - 1.0)) + errSquare) / countEpochs;
+
+    }
+    cout << "The squared error is: " << errSquare << endl;
+  }
+
+  cout << endl;
+  cout << "The network is fully trained" << endl;
+  cout << "The final mean square error is: " << meanSquareErr << endl;
+  cout << "The final delta error is: " << deltaErr << endl;
+  cout << "Iterations completed: " << (countEpochs + 1.0) << endl;
 
 /*
   Tests for neuron output
