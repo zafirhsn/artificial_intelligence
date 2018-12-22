@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <stdio.h>
+#include <string.h>
 
 using namespace std;
 
@@ -14,7 +15,6 @@ Created by Zafir Hasan for Artificial Intelligence (CS-UY 4315). The goal of thi
 
 const int NUM_HIDDEN_NEURONS = 100;
 const float LEARNING_RATE = 0.2;
-
 
 // Initialize the weights between all layers with random numbers between 0.0 and 1.0
 // COMPLETED TESTS
@@ -52,7 +52,6 @@ void displayLayer(const vector<float>& layer) {
 float activation(float x) {
   return (1 / (1 + exp(-x)));
 }
-
 
 // Derivative of activation function (Sigmoid) f' = e^x / (1 + e^x)
 // COMPLETED ALL TESTS
@@ -108,15 +107,17 @@ void assert(const string& desc, float correctOut, float output) {
   }
 }
 
+// Update weights using weight update rule
 void updateWeights(vector<vector<float>>& weightLayer, float learningRate, const vector<float>& inputLayer, const vector<float>& deltas) {
    for (size_t i = 0; i < weightLayer.size(); i++) { 
      for (size_t j = 0; j < weightLayer[i].size() - 1; j++) {
         weightLayer[i][j] += learningRate * inputLayer[j] * deltas[i];
      }
-   }
-      
- }
+   }    
+}
 
+// Calculate sum of weighted sum of outgoing weights x outputlayer deltas for hidden layer deltas 
+// COMPLETED TESTS
 float sumWeightDeltas(const vector<vector<float>>& weights, const vector<float>& deltas, int neuronIndex) {
   float weightSum = 0;
   for (size_t i = 0; i < weights.size(); i++) {
@@ -125,7 +126,9 @@ float sumWeightDeltas(const vector<vector<float>>& weights, const vector<float>&
   return weightSum;
 }
 
-void backPropagate(vector<float>& outputLayer, vector<vector<float>>& outWeights, vector<float>& hiddenLayer, vector<vector<float>>& hidWeights, vector<float>& inputLayer, vector<vector<float>>& idealOutputs) {
+// Back propagation training
+// COMPLETED TESTS
+void backPropagate(vector<float>& outputLayer, vector<vector<float>>& outWeights, vector<float>& hiddenLayer, vector<vector<float>>& hidWeights, vector<float>& inputLayer, vector<vector<float>>& labels) {
   // Store deltas for output and hidden layer neurons in vectors
   vector<float> outputDeltas(5);
   vector<float> hiddenDeltas(100);
@@ -133,7 +136,7 @@ void backPropagate(vector<float>& outputLayer, vector<vector<float>>& outWeights
   // Loop through size of output layer in order to compute delta for each neuron and store in vector
   for (size_t i = 0; i < outputLayer.size(); i++) {
     // Error = ideal - actual
-    float err = idealOutputs[0][i] - outputLayer[i];
+    float err = labels[0][i] - outputLayer[i];
 		cout << "The error for outlayer[" << i << "] is: " << err << endl;
 
     // Compute the weighted sum between these layers for the ith output neuron
@@ -171,10 +174,9 @@ void backPropagate(vector<float>& outputLayer, vector<vector<float>>& outWeights
 
 }
 
-
 // Initialize the image labels using either train_labels.txt or test_labels.txt
 // COMPLETED TESTS
-void initializeLabels(vector<vector<float>>& idealOutputs, const string filename) {
+void initializeLabels(vector<vector<float>>& labels, const string filename) {
  	ifstream ifs(filename); 
   if (!ifs) {
     cerr << "Could not open the file.\n";
@@ -193,21 +195,24 @@ void initializeLabels(vector<vector<float>>& idealOutputs, const string filename
 				imgLabel.push_back((float)n);
 			}
 		}
-		idealOutputs.push_back(imgLabel);
+		labels.push_back(imgLabel);
 	}
 }
 
-void readImage(char* filename, vector<float>& inputLayer) {
+// Read in binary image data and convert to decimal. Then store values into inputLayer
+// COMPLETED TESTS
+void readImage(string filename, vector<float>& inputLayer) {
 	FILE *fp1;
 	
 	short c;
 	int i, j, header, x, y;
 	header = 0;
-	x = 22;
-	y = 22;
+	x = 28;
+	y = 28;
 	// char file1[20] = filename;
+  const char* file = filename.c_str();
 
-	if((fp1 = fopen(filename, "rb")) == NULL) {
+	if((fp1 = fopen(file, "rb")) == NULL) {
 		printf("cannot open %s\n", filename);
 		exit(1);
 	}
@@ -233,35 +238,52 @@ void readImage(char* filename, vector<float>& inputLayer) {
 	cout << "Num pixels: " << countPixels << endl;
 }
 
+// Compute the squared error for a certain image
+// COMPLETED TESTS
+float squaredErr(const vector<float>& label, const vector<float>& outputs) {
+  float err = 0.0;
+  for (size_t i = 0; i < label.size(); i++) {
+    err += pow((label[i] - outputs[i]), 2);
+  }
+  err *= 0.5;
+  return err;
+}
+
 void neuralNetwork(int numHidden) {
   const float learningRate = 0.2;
-  float err = 1.0;
+  float meanSquareErr = 0.0;
+  float countEpochs = 0.0;
 
-  vector<float> inputLayer(748, 0.7);
-  vector<vector<float>> hidWeights(numHidden, vector<float>(749, 0.001));
+  vector<float> inputLayer(784, 0.7);
+  vector<vector<float>> hidWeights(numHidden, vector<float>(785, 0.001));
   vector<float> hiddenLayer(numHidden, 0.0);
-  vector<vector<float>> outWeights(5, vector<float>(101,0.04));
+  vector<vector<float>> outWeights(5, vector<float>(101, 0.04));
   vector<float> outputLayer(5);
 
-	vector<vector<float>> idealOutputs;
+	vector<vector<float>> labels;
+  string filename;
 
-	initializeLabels(idealOutputs, "train_labels.txt");
-
-	char filename[] = "train_image_0.bmp";
-	readImage(filename, inputLayer);
-	displayLayer(inputLayer);
+	initializeLabels(labels, "train_labels.txt");
   // initializeWeights(hidWeights);
   // initializeWeights(outWeights);
 
+/*
+  while ()
+*/
+	// readImage(filename, inputLayer);
+	// displayLayer(inputLayer);
+
 
   // Test for updating all neuron layers with appropriate output
-  // cout << "Updating all hidden layer neurons using inputs and weights" << endl;
-  // updateNeurons(inputLayer, hidWeights, hiddenLayer);
-  // displayLayer(hiddenLayer);
-  // updateNeurons(hiddenLayer, outWeights, outputLayer);
-  // displayLayer(outputLayer);
+  cout << "Updating all hidden layer neurons using inputs and weights" << endl;
+  updateNeurons(inputLayer, hidWeights, hiddenLayer);
+  displayLayer(hiddenLayer);
+  updateNeurons(hiddenLayer, outWeights, outputLayer);
+  displayLayer(outputLayer);
 
-  // backPropagate(outputLayer, outWeights, hiddenLayer, hidWeights, inputLayer, idealOutputs);
+  backPropagate(outputLayer, outWeights, hiddenLayer, hidWeights, inputLayer, labels);
+  float errSquare = squaredErr(labels[0], outputLayer);
+  cout << "The squared error is: " << errSquare << endl;
   
 
 /*
@@ -284,18 +306,6 @@ void neuralNetwork(int numHidden) {
   cout << "Weighted sum of outputLayer[0]: " << weightSum1 << endl;
 
 */
-  
-  /*
-  initializeActualOutputs
-  initializeInputs(file);
-  while (err > 2%) {
-    computeNodes(hiddenLayer, hiddenWeights, inputLayer);
-    computeNodes(outputLayer, outWeights, hiddenLayer);
-    backPropagate(outputLayer, outWeights, hiddenLayer, hidWeights, inputLayer, vector of actual ANSWER);
-
-  }
-
-  */
 
 }
 
