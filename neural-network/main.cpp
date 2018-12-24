@@ -13,17 +13,17 @@ using namespace std;
 Created by Zafir Hasan for Artificial Intelligence (CS-UY 4315). The goal of this program is to create an artificial neural network that can recognize the digits 0-4 in handwriting. This will be a 2 layer fully-connected network that will be trained through back propagation. 
 */
 
-const int NUM_HIDDEN_NEURONS = 100;
+const int NUM_HIDDEN_NEURONS = 200;
 const int NUM_OUTPUT_NEURONS = 5;
 const float LEARNING_RATE = 0.2;
 const int TRAINING_IMAGE_COUNT = 28038;
 const int TESTING_IMAGE_COUNT = 2561;
-const float CUTOFF_ERROR = 0.1;
+const float CUTOFF_ERROR = 0.01;
 
 vector<float> inputLayer(784);
-vector<vector<float>> hidWeights(NUM_HIDDEN_NEURONS, vector<float>(784, 0.0));
+vector<vector<float>> hidWeights(NUM_HIDDEN_NEURONS, vector<float>(785, 0.0));
 vector<float> hiddenLayer(NUM_HIDDEN_NEURONS);
-vector<vector<float>> outWeights(NUM_OUTPUT_NEURONS, vector<float>(NUM_HIDDEN_NEURONS, 0.0));
+vector<vector<float>> outWeights(NUM_OUTPUT_NEURONS, vector<float>(NUM_HIDDEN_NEURONS+1, 0.0));
 vector<float> outputLayer(NUM_OUTPUT_NEURONS);
 
 // Initialize the weights between all layers with random numbers between 0.0 and 1.0
@@ -31,7 +31,7 @@ vector<float> outputLayer(NUM_OUTPUT_NEURONS);
 void initializeWeights(vector<vector<float>>& layer) {
   for (size_t i = 0; i < layer.size(); i++) {
     for (size_t j = 0; j < layer[i].size(); j++) {
-      float randWeight = (rand() % 10000) / 10000000.0;
+      float randWeight = (rand() % 10000) / 100000000.0;
       layer[i][j] = randWeight;
     }
   }
@@ -73,13 +73,13 @@ float derivActivation(float x) {
 // COMPLETED TESTS
 float weightedSum(const vector<float>& input, const vector<float>& weights) {
   float weightSum = 0;
-  for (size_t i = 0; i < input.size(); i++) {
-    // if (i == input.size()) {
-    //   weightSum += -1 * weights[i];
-    // }
-    // else {
+  for (size_t i = 0; i <= input.size(); i++) {
+    if (i == input.size()) {
+      weightSum += -1 * weights[i];
+    }
+    else {
       weightSum += input[i] * weights[i];
-    // }  
+    }  
   }
   return weightSum;
 }
@@ -108,7 +108,12 @@ void updateNeurons(const vector<float>& inputs, const vector<vector<float>>& wei
 void updateWeights(vector<vector<float>>& weightLayer, float learningRate, const vector<float>& inputLayer, const vector<float>& deltas) {
    for (size_t i = 0; i < weightLayer.size(); i++) { 
      for (size_t j = 0; j < weightLayer[i].size(); j++) {
-        weightLayer[i][j] += (learningRate * inputLayer[j] * deltas[i]);
+        if (j == weightLayer[i].size() - 1) {
+          weightLayer[i][j] -= (learningRate * -1 * deltas[i]);
+        }
+        else {
+          weightLayer[i][j] += (learningRate * inputLayer[j] * deltas[i]);
+        }  
      }
    }    
 }
@@ -142,7 +147,7 @@ void backPropagate(vector<float>& outputLayer, vector<vector<float>>& outWeights
 
 
     float delta = err * derivActivation(weightSum);
-		// cout << "The DELTA of outputLayer[" << i << "] is: " << delta << endl;
+		cout << "The DELTA of outputLayer[" << i << "] is: " << delta << endl;
 		// cout << endl;
 		outputDeltas[i] = delta;
   }
@@ -150,18 +155,18 @@ void backPropagate(vector<float>& outputLayer, vector<vector<float>>& outWeights
   // Update weights between output layer and hidden layer 
   updateWeights(outWeights, LEARNING_RATE, hiddenLayer, outputDeltas);
 	// displayLayer(outWeights);
-	// cout << endl;
+	cout << endl;
 
   // Loop through size of hidden layer in order to compute deltas for hidden layer neurons
   for (size_t i = 0; i < hiddenLayer.size(); i++) {  
     // Compute deltas for hidden layer neurons after updating weights between hiddn layer and output layer
 		float sumoutgoingWeights = sumWeightDeltas(outWeights, outputDeltas, i);
     float weightSum = weightedSum(inputLayer, hidWeights[i]);
-    // cout << "The weighted sum of hiddenLayer[" << i << "] is: " << weightSum << endl;
+    cout << "The weighted sum of hiddenLayer[" << i << "] is: " << weightSum << endl;
     float delta = derivActivation(weightSum) * sumoutgoingWeights;
 		// cout << "The sum of all outgoing weights of hiddenLayer[" << i << "] is: " << sumoutgoingWeights << endl; 
 
-		// cout << "The DELTA of hiddenLayer[" << i << "] is: " << delta << endl;
+		cout << "The DELTA of hiddenLayer[" << i << "] is: " << delta << endl;
     hiddenDeltas[i] = delta;
   }
 
@@ -263,6 +268,7 @@ void initializeInputs(const vector<float>& inputs, vector<float>& inputLayer) {
 void trainNetwork(vector<float>& outputLayer, vector<vector<float>>& outWeights, vector<float>& hiddenLayer, vector<vector<float>>& hidWeights, vector<float>& inputLayer) {
   float meanSquareErr = 0.0;
   float deltaErr = 1000.0;
+  float countItrs = 0.0;
   float countEpochs = 0.0;
 
 	vector<vector<float>> labels;
@@ -271,15 +277,20 @@ void trainNetwork(vector<float>& outputLayer, vector<vector<float>>& outWeights,
 
   readImage(filename, inputs, TRAINING_IMAGE_COUNT);
 	initializeLabels(labels, "train_labels.txt");
+  
   initializeWeights(hidWeights);
   initializeWeights(outWeights);
   
 
   // abs(deltaErr > 1.5)
-  while (abs(deltaErr) > CUTOFF_ERROR && countEpochs < TRAINING_IMAGE_COUNT) {
+  while (abs(deltaErr) > CUTOFF_ERROR && countEpochs < 3.0) {
+    if (countItrs >= TRAINING_IMAGE_COUNT) {
+      countItrs = 0;
+      countEpochs++;
+    }
     // Read the next image and initialize inputLayer with decimal pixel values
     inputLayer.clear();
-    initializeInputs(inputs[(int)countEpochs], inputLayer);
+    initializeInputs(inputs[(int)countItrs], inputLayer);
     // displayLayer(inputLayer);
     // displayLayer(outWeights);
 
@@ -291,19 +302,20 @@ void trainNetwork(vector<float>& outputLayer, vector<vector<float>>& outWeights,
     displayLayer(outputLayer);
 
     // Back propagate the error
-    backPropagate(outputLayer, outWeights, hiddenLayer, hidWeights, inputLayer, labels[(int)countEpochs]);
+    backPropagate(outputLayer, outWeights, hiddenLayer, hidWeights, inputLayer, labels[(int)countItrs]);
     // displayLayer(outWeights);
 
     // Compute the square error for the output neurons for this image and then calculate the percent change in error from the meanSquareErr
-    float errSquare = squaredErr(labels[(int)countEpochs], outputLayer);
-    countEpochs += 1.0;
-    cout << countEpochs << endl;
+    float errSquare = squaredErr(labels[(int)countItrs], outputLayer);
+    countItrs += 1.0;
+    cout << countItrs << endl;
     if (meanSquareErr == 0.0) {
       meanSquareErr = errSquare;
     }
     else {
+      float totItrs = ((float)TRAINING_IMAGE_COUNT * countEpochs) + countItrs;
       deltaErr = ((errSquare - meanSquareErr) / meanSquareErr) * 100.0;
-      meanSquareErr = ((meanSquareErr * (countEpochs - 1.0)) + errSquare) / countEpochs;
+      meanSquareErr = ((meanSquareErr * (totItrs - 1.0)) + errSquare) / totItrs;
 
     }
     cout << "The squared error is: " << errSquare << endl;
@@ -313,7 +325,8 @@ void trainNetwork(vector<float>& outputLayer, vector<vector<float>>& outWeights,
   cout << "The network is fully trained" << endl;
   cout << "The final mean square error is: " << meanSquareErr << endl;
   cout << "The final delta error is: " << deltaErr << endl;
-  cout << "Iterations completed: " << countEpochs << endl;
+  cout << "Iterations completed: " << ((float)TRAINING_IMAGE_COUNT * countEpochs) + countItrs << endl;
+  cout << "Epochs completed: " << countEpochs << endl;
 
 }
 
@@ -329,7 +342,7 @@ int max(const vector<float>& vec) {
   return mindex;
 }
 
-void testNetwork(vector<float>& outputLayer, vector<vector<float>>& outWeights, vector<float>& hiddenLayer, vector<vector<float>>& hidWeights, vector<float>& inputLayer) {
+void testNetwork(vector<float>& outputLayer, const vector<vector<float>>& outWeights, vector<float>& hiddenLayer, const vector<vector<float>>& hidWeights, vector<float>& inputLayer) {
   vector<vector<float>> confusionMatrix(5, vector<float>(5));
   vector<vector<float>> labels; 
   vector<vector<float>> inputs;
@@ -368,7 +381,7 @@ void testNetwork(vector<float>& outputLayer, vector<vector<float>>& outWeights, 
 int main() {
 
   trainNetwork(outputLayer, outWeights, hiddenLayer, hidWeights, inputLayer);
-  cout << "NOW TESTING NEURAL NETWORK" << endl;
+  // cout << "NOW TESTING NEURAL NETWORK" << endl;
   testNetwork(outputLayer, outWeights, hiddenLayer, hidWeights, inputLayer);
 
 }
