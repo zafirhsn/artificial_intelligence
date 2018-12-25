@@ -10,26 +10,27 @@
 using namespace std;
 
 /*
-Created by Zafir Hasan for Artificial Intelligence (CS-UY 4315). The goal of this program is to create an artificial neural network that can recognize the digits 0-4 in handwriting. This will be a 2 layer fully-connected network that will be trained through back propagation. 
+Created by Zafir Hasan for Artificial Intelligence (CS-UY 4613). The goal of this program is to create an artificial neural network that can recognize the digits 0-4 in handwriting. This will be a 2 layer fully-connected network that will be trained through back propagation. 
 */
 
+// All global variables relevant to neural network
 const int NUM_HIDDEN_NEURONS = 100;
 const int NUM_OUTPUT_NEURONS = 5;
 const long double LEARNING_RATE = 0.01;
 const int TRAINING_IMAGE_COUNT = 28038;
 const int TESTING_IMAGE_COUNT = 2561;
-const long double CUTOFF_ERROR = 0.00005;
+const long double CUTOFF_ERROR = 0.0005;
 const int HIDDEN_BIAS = -100000;
 const int OUT_BIAS = -1;
 
+// The input, hidden, and output layers of the neural network, represented as vectors of long double numbers. Also the two weight layers of the network represented as 2D vector of long doubles
 vector<long double> inputLayer(784);
 vector<vector<long double>> hidWeights(NUM_HIDDEN_NEURONS, vector<long double>(785, 0.0));
 vector<long double> hiddenLayer(NUM_HIDDEN_NEURONS);
 vector<vector<long double>> outWeights(NUM_OUTPUT_NEURONS, vector<long double>(NUM_HIDDEN_NEURONS+1, 0.0));
 vector<long double> outputLayer(NUM_OUTPUT_NEURONS);
 
-// Initialize the weights between all layers with random numbers between 0.0 and 1.0
-// COMPLETED TESTS
+// Initialize the weights between all layers with random numbers between 0.0 and 0.00009999
 void initializeWeights(vector<vector<long double>>& layer) {
   for (size_t i = 0; i < layer.size(); i++) {
     for (size_t j = 0; j < layer[i].size(); j++) {
@@ -40,7 +41,6 @@ void initializeWeights(vector<vector<long double>>& layer) {
 }
 
 // Display any one of the weight layers
-// COMPLETED TESTS
 void displayLayer(const vector<vector<long double>>& layer) {
   for (size_t i = 0; i < layer.size(); i++) {
 		// cout << "All weights for layer[" << i << "]:" << endl;
@@ -52,7 +52,6 @@ void displayLayer(const vector<vector<long double>>& layer) {
 }
 
 // Display any of the perceptron layers
-// COMPLETED TESTS
 void displayLayer(const vector<long double>& layer) {
   for (size_t i = 0; i < layer.size(); i++) {
     cout << layer[i] << endl;
@@ -60,19 +59,16 @@ void displayLayer(const vector<long double>& layer) {
 }
 
 // Activation function (Sigmoid) f = 1 / (1 + e^-x)
-// COMPLETED TESTS
 long double activation(long double x) {
   return (1 / (1 + exp(-x)));
 }
 
 // Derivative of activation function (Sigmoid) f' = e^x / (1 + e^x)
-// COMPLETED ALL TESTS
 long double derivActivation(long double x) {
   return (exp(-x) / pow((1 + exp(-x)), 2));
 }
 
 // Compute weighted sum of inputs to a neuron
-// COMPLETED TESTS
 long double weightedSum(const vector<long double>& input, const vector<long double>& weights, int bias) {
   long double weightSum = 0;
   for (size_t i = 0; i <= input.size(); i++) {
@@ -87,7 +83,6 @@ long double weightedSum(const vector<long double>& input, const vector<long doub
 }
 
 // Compute output of single neuron
-// COMPLETED TESTS
 long double neuronOutput(const vector<long double>& input, const vector<long double>& weights, int bias) {
   long double weightSum = weightedSum(input, weights, bias);
   // cout << "Weighted sum of inputs: " << weightSum << endl;
@@ -97,7 +92,6 @@ long double neuronOutput(const vector<long double>& input, const vector<long dou
 }
 
 // Compute output of all neurons in a layer 
-// COMPLETED TESTS
 void updateNeurons(const vector<long double>& inputs, const vector<vector<long double>>& weights, vector<long double>& outputs, int bias) {
   for (size_t i = 0; i < outputs.size(); i++) {
     long double output = neuronOutput(inputs, weights[i], bias);
@@ -106,7 +100,6 @@ void updateNeurons(const vector<long double>& inputs, const vector<vector<long d
 }
 
 // Update weights using weight update rule
-// COMPLETED TESTS 
 void updateWeights(vector<vector<long double>>& weightLayer, long double learningRate, const vector<long double>& inputLayer, const vector<long double>& deltas) {
    for (size_t i = 0; i < weightLayer.size(); i++) { 
      for (size_t j = 0; j < weightLayer[i].size(); j++) {
@@ -121,7 +114,6 @@ void updateWeights(vector<vector<long double>>& weightLayer, long double learnin
 }
 
 // Calculate sum of weighted sum of outgoing weights x outputlayer deltas for hidden layer deltas 
-// COMPLETED TESTS
 long double sumWeightDeltas(const vector<vector<long double>>& weights, const vector<long double>& deltas, int neuronIndex) {
   long double weightSum = 0;
   for (size_t i = 0; i < weights.size(); i++) {
@@ -131,7 +123,6 @@ long double sumWeightDeltas(const vector<vector<long double>>& weights, const ve
 }
 
 // Back propagation training
-// COMPLETED TESTS
 void backPropagate(vector<long double>& outputLayer, vector<vector<long double>>& outWeights, vector<long double>& hiddenLayer, vector<vector<long double>>& hidWeights, vector<long double>& inputLayer, vector<long double>& labels) {
   // Store deltas for output and hidden layer neurons in vectors
   vector<long double> outputDeltas(NUM_OUTPUT_NEURONS);
@@ -178,7 +169,6 @@ void backPropagate(vector<long double>& outputLayer, vector<vector<long double>>
 }
 
 // Initialize the image labels using either train_labels.txt or test_labels.txt
-// COMPLETED TESTS
 void initializeLabels(vector<vector<long double>>& labels, const string filename) {
  	ifstream ifs(filename); 
   if (!ifs) {
@@ -203,7 +193,6 @@ void initializeLabels(vector<vector<long double>>& labels, const string filename
 }
 
 // Read in binary image data and convert to decimal. Then store values into inputLayer
-// COMPLETED TESTS
 void readImage(string filename, vector<vector<long double>>& inputs, int imageCount) {
 	FILE *fp1;
 	
@@ -251,7 +240,6 @@ void readImage(string filename, vector<vector<long double>>& inputs, int imageCo
 }
 
 // Compute the squared error for a certain image
-// COMPLETED TESTS
 long double squaredErr(const vector<long double>& label, const vector<long double>& outputs) {
   long double err = 0.0;
   for (size_t i = 0; i < label.size(); i++) {
@@ -262,7 +250,6 @@ long double squaredErr(const vector<long double>& label, const vector<long doubl
 }
 
 // Initialize the input layer with the current image 
-// COMPLETED TESTS
 void initializeInputs(const vector<long double>& inputs, vector<long double>& inputLayer) {
   for (size_t i = 0; i < inputs.size(); i++) {
     inputLayer.push_back(inputs[i]);
@@ -289,7 +276,7 @@ void trainNetwork(vector<long double>& outputLayer, vector<vector<long double>>&
   
 
   // Keep training as long as the change in error between meanSquareErr and square err of current iteration are above 0.0005% and while the number of epochs is less than 2
-  while (abs(deltaErr) > CUTOFF_ERROR && countEpochs < 2.0) {
+  while (abs(deltaErr) > CUTOFF_ERROR && countEpochs < 4.0) {
     if (countItrs >= TRAINING_IMAGE_COUNT) {
       countItrs = 0;
       countEpochs++;
